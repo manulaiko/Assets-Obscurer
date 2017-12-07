@@ -19,10 +19,10 @@ public class Settings {
     /**
      * Path to the private key.
      */
-    public static File privateKey = new File("privateKey");
+    public static File privateKey = new File("private.key");
 
     /**
      * Path to the public key.
      */
-    public static File publicKey = new File("publicKey");
+    public static File publicKey = new File("public.key");
 }
