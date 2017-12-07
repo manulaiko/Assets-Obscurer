@@ -1,6 +1,8 @@
 package com.manulaiko.assetsobscurer.main;
 
 import com.manulaiko.assetsobscurer.main.arguments.Assets;
+import com.manulaiko.assetsobscurer.main.arguments.PrivateKey;
+import com.manulaiko.assetsobscurer.main.arguments.PublicKey;
 import com.manulaiko.tabitha.Application;
 import com.manulaiko.tabitha.arguments.Argument;
 import com.manulaiko.tabitha.log.Console;
@@ -68,7 +70,9 @@ public class Launcher extends Application {
     @Override
     protected Iterable<Argument> _arguments() {
         return Arrays.asList(
-                new Assets()
+                new Assets(),
+                new PublicKey(),
+                new PrivateKey()
         );
     }
 }
