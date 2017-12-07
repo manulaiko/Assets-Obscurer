@@ -25,4 +25,9 @@ public class Settings {
      * Path to the public key.
      */
     public static File publicKey = new File("public.key");
+
+    /**
+     * Key length.
+     */
+    public static int keyLength = 2048;
 }

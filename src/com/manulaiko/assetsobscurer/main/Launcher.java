@@ -1,6 +1,7 @@
 package com.manulaiko.assetsobscurer.main;
 
 import com.manulaiko.assetsobscurer.main.arguments.Assets;
+import com.manulaiko.assetsobscurer.main.arguments.KeyLength;
 import com.manulaiko.assetsobscurer.main.arguments.PrivateKey;
 import com.manulaiko.assetsobscurer.main.arguments.PublicKey;
 import com.manulaiko.tabitha.Application;
@@ -72,7 +73,8 @@ public class Launcher extends Application {
         return Arrays.asList(
                 new Assets(),
                 new PublicKey(),
-                new PrivateKey()
+                new PrivateKey(),
+                new KeyLength()
         );
     }
 }
