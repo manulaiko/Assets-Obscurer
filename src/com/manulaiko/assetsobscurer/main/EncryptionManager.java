@@ -5,12 +5,12 @@ import com.manulaiko.tabitha.log.ConsoleManager;
 import lombok.Data;
 
 import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.security.*;
-import java.security.spec.PKCS8EncodedKeySpec;
-import java.security.spec.X509EncodedKeySpec;
 
 /**
  * Encryption manager.
@@ -43,8 +43,7 @@ public class EncryptionManager {
         if (EncryptionManager._instance == null) {
             EncryptionManager._instance = new EncryptionManager(
                     Settings.keyLength,
-                    Settings.privateKey,
-                    Settings.publicKey
+                    Settings.key
             );
             EncryptionManager._instance.initialize();
         }
@@ -62,74 +61,64 @@ public class EncryptionManager {
     private final int _keyLength;
 
     /**
-     * Private key.
+     * Key location.
      */
-    private final File _privateKey;
+    private final File _key;
 
     /**
-     * Public key.
+     * AES Key.
      */
-    private final File _publicKey;
+    private SecretKey _secretKey;
 
     /**
-     * Key pair.
+     * AES Cipher for encryption.
      */
-    private KeyPair _keyPair;
+    private Cipher _aesCipherEncrypt;
 
     /**
-     * Cipher.
+     * AES Cipher for decryption.
      */
-    private Cipher _cipher;
+    private Cipher _aesCipherDecrypt;
 
     /**
      * Initializes the encryption manager.
      */
     private void initialize() {
-        if (this.keyPair() != null) {
+        if (this.secretKey() != null) {
             return;
         }
 
-        if (!this.privateKey().isFile() || !this.publicKey().isFile()) {
-            this.keyPair(this._generateKeyPair());
-
-            return;
+        if (!this.key().isFile()) {
+            this.secretKey(this._generateKey());
+        } else {
+            this.secretKey(this._loadKey());
         }
 
         try {
-            this.keyPair(this._loadKeyPair());
-            this.cipher(Cipher.getInstance("RSA"));
+            this.aesCipherEncrypt(Cipher.getInstance("AES"));
+            this.aesCipherDecrypt(Cipher.getInstance("AES"));
+
+            this.aesCipherDecrypt().init(Cipher.DECRYPT_MODE, this.secretKey());
+            this.aesCipherEncrypt().init(Cipher.ENCRYPT_MODE, this.secretKey());
         } catch (Exception e) {
             EncryptionManager.console.exception("Couldn't initialize Encryption Manager!", e);
         }
     }
 
     /**
-     * Loads the key pair from the filesystem.
+     * Loads the key from the filesystem.
      *
-     * @return Loaded key pair.
+     * @return Loaded key.
      */
-    private KeyPair _loadKeyPair() {
+    private SecretKey _loadKey() {
         try {
-            EncryptionManager.console.info("Loading key pair...");
-            FileInputStream input = new FileInputStream(this.publicKey());
-            byte[] encodedPublicKey = new byte[(int) this.publicKey().length()];
-            input.read(encodedPublicKey);
+            EncryptionManager.console.info("Loading AES key...");
+            FileInputStream input = new FileInputStream(this.key());
+            byte[] key = new byte[(int) this.key().length()];
+            input.read(key);
             input.close();
 
-            input = new FileInputStream(this.privateKey());
-            byte[] encodedPrivateKey = new byte[(int) this.privateKey().length()];
-            input.read(encodedPrivateKey);
-            input.close();
-
-            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
-
-            X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(encodedPublicKey);
-            PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(encodedPrivateKey);
-
-            PublicKey publicKey = keyFactory.generatePublic(publicKeySpec);
-            PrivateKey privateKey = keyFactory.generatePrivate(privateKeySpec);
-
-            return new KeyPair(publicKey, privateKey);
+            return new SecretKeySpec(key, "AES");
         } catch (Exception e) {
             EncryptionManager.console.exception("Couldn't load Key Pair!", e);
 
@@ -138,31 +127,23 @@ public class EncryptionManager {
     }
 
     /**
-     * Generates a new key pair
+     * Generates a new key
      *
-     * @return Generated key pair.
+     * @return Generated key.
      */
-    private KeyPair _generateKeyPair() {
+    private SecretKey _generateKey() {
         try {
-            EncryptionManager.console.info("Generating key pair...");
-            KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
+            EncryptionManager.console.info("Generating AES key...");
+            KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+            keyGen.init(this.keyLength());
 
-            keyGen.initialize(this.keyLength());
-            KeyPair keyPair = keyGen.genKeyPair();
-            PrivateKey privateKey = keyPair.getPrivate();
-            PublicKey publicKey = keyPair.getPublic();
+            SecretKey key = keyGen.generateKey();
 
-            X509EncodedKeySpec publicKeySpec = new X509EncodedKeySpec(publicKey.getEncoded());
-            FileOutputStream output = new FileOutputStream(this.publicKey());
-            output.write(publicKeySpec.getEncoded());
+            FileOutputStream output = new FileOutputStream(this.key());
+            output.write(key.getEncoded());
             output.close();
 
-            PKCS8EncodedKeySpec privateKeySpec = new PKCS8EncodedKeySpec(privateKey.getEncoded());
-            output = new FileOutputStream(this.privateKey());
-            output.write(privateKeySpec.getEncoded());
-            output.close();
-
-            return keyPair;
+            return key;
         } catch (Exception e) {
             EncryptionManager.console.exception("Couldn't generate Key Pair!", e);
 
@@ -179,9 +160,7 @@ public class EncryptionManager {
      */
     public byte[] encrypt(byte[] bytes) {
         try {
-            this.cipher().init(Cipher.ENCRYPT_MODE, this.keyPair().getPrivate());
-
-            return this.cipher().doFinal(bytes);
+            return this.aesCipherEncrypt().doFinal(bytes);
         } catch (Exception e) {
             EncryptionManager.console.exception("Couldn't encrypt bytes!", e);
 
@@ -198,9 +177,7 @@ public class EncryptionManager {
      */
     public byte[] decrypt(byte[] bytes) {
         try {
-            this.cipher().init(Cipher.DECRYPT_MODE, this.keyPair().getPublic());
-
-            return this.cipher().doFinal(bytes);
+            return this.aesCipherDecrypt().doFinal(bytes);
         } catch (Exception e) {
             EncryptionManager.console.exception("Couldn't decrypt bytes!", e);
 

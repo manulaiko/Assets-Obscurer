@@ -88,8 +88,7 @@ public class Launcher extends Application {
     protected Iterable<Argument> _arguments() {
         return Arrays.asList(
                 new Assets(),
-                new PublicKey(),
-                new PrivateKey(),
+                new Key(),
                 new KeyLength(),
                 new CommandMode()
         );

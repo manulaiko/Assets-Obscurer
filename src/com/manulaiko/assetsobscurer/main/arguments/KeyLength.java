@@ -15,7 +15,7 @@ import java.io.File;
  *
  * Sets the key length.
  *
- * By default it's `2048`.
+ * By default it's `128`.
  *
  * @author Manulaiko <manulaiko@gmail.com>
  */
@@ -45,7 +45,7 @@ public class KeyLength extends Argument {
     /**
      * Default value.
      */
-    private String _defaultValue = "2048";
+    private String _defaultValue = "128";
 
     /**
      * Handles the argument.

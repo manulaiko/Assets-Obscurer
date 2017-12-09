@@ -22,17 +22,12 @@ public class Settings {
     public static File assets = new File("assets");
 
     /**
-     * Path to the private key.
+     * Path to the encryption key.
      */
-    public static File privateKey = new File("private.key");
-
-    /**
-     * Path to the public key.
-     */
-    public static File publicKey = new File("public.key");
+    public static File key = new File("key");
 
     /**
      * Key length.
      */
-    public static int keyLength = 2048;
+    public static int keyLength = 128;
 }

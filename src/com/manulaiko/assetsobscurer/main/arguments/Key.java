@@ -10,42 +10,42 @@ import lombok.EqualsAndHashCode;
 import java.io.File;
 
 /**
- * Private key argument.
- * =====================
+ * Key argument.
+ * =============
  *
- * Sets the path to the private key.
+ * Sets the path to the encryption key.
  *
- * By default it's `./private.key`.
+ * By default it's `./key`.
  *
  * @author Manulaiko <manulaiko@gmail.com>
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-public class PrivateKey extends Argument {
+public class Key extends Argument {
     /**
      * Console logger.
      */
-    public static Console console = ConsoleManager.forClass(PrivateKey.class);
+    public static Console console = ConsoleManager.forClass(Key.class);
 
     /**
      * Argument name.
      */
-    private String _argument = "K";
+    private String _argument = "k";
 
     /**
      * Argument usage.
      */
-    private String _usage = "-K=PATH";
+    private String _usage = "-k=PATH";
 
     /**
      * Argument description.
      */
-    private String _description = "Sets the path to the private key";
+    private String _description = "Sets the path to the encryption key";
 
     /**
      * Default value.
      */
-    private String _defaultValue = "./private.key";
+    private String _defaultValue = "./key";
 
     /**
      * Handles the argument.
@@ -53,19 +53,19 @@ public class PrivateKey extends Argument {
     @Override
     public void handle() {
         if (super.value().isEmpty()) {
-            super.print(PrivateKey.console);
+            super.print(Key.console);
 
             return;
         }
 
         File f = new File(super.value());
         if (!f.isFile()) {
-            super.print(PrivateKey.console);
+            super.print(Key.console);
 
             return;
         }
 
-        Settings.privateKey = f;
-        PrivateKey.console.info("Private key path: " + f.getAbsolutePath());
+        Settings.key = f;
+        Key.console.info("Encryption key path: " + f.getAbsolutePath());
     }
 }
