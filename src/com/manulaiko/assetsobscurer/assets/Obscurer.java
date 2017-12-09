@@ -1,6 +1,7 @@
 package com.manulaiko.assetsobscurer.assets;
 
 import com.manulaiko.assetsobscurer.main.EncryptionManager;
+import com.manulaiko.assetsobscurer.main.Settings;
 import com.manulaiko.tabitha.log.Console;
 import com.manulaiko.tabitha.log.ConsoleManager;
 import lombok.Data;
@@ -11,6 +12,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -85,10 +87,9 @@ public class Obscurer {
                 return false;
             }
             Files.write(p, bytes);
-            p = Files.move(p, p.resolveSibling(hash));
+            p = Files.move(p, Settings.assets.toPath());
 
             asset.isEncrypted(true);
-            asset.path(p.toString());
             asset.hash(hash);
 
             Obscurer.console.fine(f.getPath() + " encrypted to " + p.toString());
@@ -97,6 +98,59 @@ public class Obscurer {
 
             return false;
         } catch (NoSuchAlgorithmException e) {
+            return false;
+        }
+
+        return true;
+    }
+
+
+    /**
+     * Decrypted the assets.
+     *
+     * @return Decrypted assets.
+     */
+    public List<Index.Asset> decrypt() {
+        List<Index.Asset> assets = new ArrayList<>();
+
+        for (Index.Asset asset : this.assets()) {
+            if (this.decrypt(asset)) {
+                assets.add(asset);
+            }
+        }
+
+        return assets;
+    }
+
+    /**
+     * Decrypt a given asset.
+     *
+     * @param asset Asset to decrypt.
+     *
+     * @return Whether the asset was successfully decrypted or not.
+     */
+    public boolean decrypt(Index.Asset asset) {
+        if (!asset.isEncrypted()) {
+            return false;
+        }
+
+        try {
+            Obscurer.console.fine("Decrypting " + asset.path() + "...");
+            File f = new File(asset.hash());
+            Path p = f.toPath();
+
+            byte[] bytes = Files.readAllBytes(p);
+            byte[] decrypted = EncryptionManager.instance().decrypt(bytes);
+
+            Files.write(p, decrypted);
+            Files.move(p, Paths.get(asset.path()));
+
+            asset.isEncrypted(false);
+
+            Obscurer.console.fine(f.getPath() + " decrypted to " + asset.path());
+        } catch (IOException e) {
+            Obscurer.console.exception("Couldn't read asset!", e);
+
             return false;
         }
 

@@ -133,6 +133,20 @@ public class AssetsManager {
     }
 
     /**
+     * Decrypts the indexed assets.
+     */
+    public void decrypt() {
+        List<Index.Asset> assets = this.index().encrypted();
+        Obscurer obscurer = new Obscurer(assets);
+
+        AssetsManager.console.info("Decrypting " + assets.size() + "assets...");
+        List<Index.Asset> decrypted = obscurer.decrypt();
+        AssetsManager.console.info(decrypted.size() + " assets decrypted!");
+
+        this.updateAll(decrypted);
+    }
+
+    /**
      * Adds a list of assets to the index.
      *
      * @param assets Assets to add.
