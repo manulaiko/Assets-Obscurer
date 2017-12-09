@@ -12,6 +12,11 @@ import java.io.File;
  */
 public class Settings {
     /**
+     * Whether we're running in the command mode or not.
+     */
+    public static boolean commandMode = false;
+
+    /**
      * Path to the assets folder.
      */
     public static File assets = new File("assets");

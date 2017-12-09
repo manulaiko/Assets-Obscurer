@@ -1,9 +1,6 @@
 package com.manulaiko.assetsobscurer.main;
 
-import com.manulaiko.assetsobscurer.main.arguments.Assets;
-import com.manulaiko.assetsobscurer.main.arguments.KeyLength;
-import com.manulaiko.assetsobscurer.main.arguments.PrivateKey;
-import com.manulaiko.assetsobscurer.main.arguments.PublicKey;
+import com.manulaiko.assetsobscurer.main.arguments.*;
 import com.manulaiko.tabitha.Application;
 import com.manulaiko.tabitha.arguments.Argument;
 import com.manulaiko.tabitha.log.Console;
@@ -74,7 +71,8 @@ public class Launcher extends Application {
                 new Assets(),
                 new PublicKey(),
                 new PrivateKey(),
-                new KeyLength()
+                new KeyLength(),
+                new CommandMode()
         );
     }
 }
