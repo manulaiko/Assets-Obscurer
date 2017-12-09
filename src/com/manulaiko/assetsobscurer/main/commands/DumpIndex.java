@@ -37,8 +37,8 @@ public class DumpIndex implements ICommand {
         });
 
         DumpIndex.console.info("Total: " + i.assets().size() + " indexed assets.");
-        DumpIndex.console.info("\t" + i.encrypted() + " encrypted assets.");
-        DumpIndex.console.info("\t" + i.decrypted() + " decrypted assets.");
+        DumpIndex.console.info("\t" + i.encrypted().size() + " encrypted assets.");
+        DumpIndex.console.info("\t" + i.decrypted().size() + " decrypted assets.");
     }
 
     /**

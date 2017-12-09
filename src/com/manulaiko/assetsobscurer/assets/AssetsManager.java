@@ -9,6 +9,7 @@ import lombok.Data;
 
 import java.io.File;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -79,7 +80,27 @@ public class AssetsManager {
 
             this.index(new Gson().fromJson(json, Index.class));
         } catch (Exception e) {
+            AssetsManager.console.info("Asset index not found, a new one will be created.");
             this.index(new Index(new ArrayList<>()));
+        }
+    }
+
+    /**
+     * Saves the asset index.
+     */
+    public void saveIndex() {
+        try {
+            String json = new Gson().toJson(this.index());
+            Path path = this.assets().toPath().resolve("assets.index");
+
+            AssetsManager.console.info("Saving assets index to " + path + "...");
+
+            byte[] encryptedIndex = EncryptionManager.instance().encrypt(json.getBytes("UTF-8"));
+            Files.write(path, encryptedIndex);
+
+            AssetsManager.console.info("Assets index updated.");
+        } catch (Exception e) {
+            AssetsManager.console.exception("Couldn't save assets index!", e);
         }
     }
 

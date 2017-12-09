@@ -3,6 +3,7 @@ package com.manulaiko.assetsobscurer.main;
 import com.manulaiko.assetsobscurer.main.arguments.*;
 import com.manulaiko.assetsobscurer.main.commands.DumpIndex;
 import com.manulaiko.assetsobscurer.main.commands.Encrypt;
+import com.manulaiko.assetsobscurer.main.commands.SaveIndex;
 import com.manulaiko.assetsobscurer.main.commands.Scan;
 import com.manulaiko.tabitha.Application;
 import com.manulaiko.tabitha.arguments.Argument;
@@ -77,6 +78,7 @@ public class Launcher extends Application {
         cp.add(new Scan());
         cp.add(new Encrypt());
         cp.add(new DumpIndex());
+        cp.add(new SaveIndex());
 
         cp.start();
     }
