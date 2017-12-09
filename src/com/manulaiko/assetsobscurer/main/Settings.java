@@ -14,7 +14,7 @@ public class Settings {
     /**
      * Whether we're running in the command mode or not.
      */
-    public static boolean commandMode = false;
+    public static boolean commandMode = true;
 
     /**
      * Path to the assets folder.

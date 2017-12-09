@@ -5,6 +5,7 @@ import com.manulaiko.tabitha.log.ConsoleManager;
 import lombok.Data;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,13 +32,17 @@ public class Scanner {
     /**
      * Scanned assets.
      */
-    private List<Index.Asset> _assets;
+    private List<Index.Asset> _assets = new ArrayList<>();
 
     /**
      * Scans the directory and returns the assets.
      */
     public void scan() {
-        Arrays.stream(this.dir().listFiles(f -> f.isDirectory())).forEach(this::scan);
+        File[] files = this.dir().listFiles();
+
+        if (files != null) {
+            Arrays.stream(files).forEach(this::scan);
+        }
     }
 
     /**
@@ -46,9 +51,19 @@ public class Scanner {
      * @param dir Directory to scan.
      */
     public void scan(File dir) {
-        Arrays.stream(dir.listFiles(f -> f.isDirectory())).forEach(this::scan);
+        File[] dirs = dir.listFiles(File::isDirectory);
+        if (dirs != null) {
+            Arrays.stream(dirs).forEach(this::scan);
+        }
 
-        Arrays.stream(dir.listFiles(f -> f.isFile() && !f.getName().equals("assets.index"))).forEach(this::add);
+        File[] files = dir.listFiles(File::isFile);
+        if (files != null) {
+            Arrays.stream(files).forEach(this::add);
+        }
+
+        if (dir.isFile()) {
+            this.add(dir);
+        }
     }
 
     /**
@@ -60,6 +75,10 @@ public class Scanner {
         if (asset.isDirectory()) {
             this.scan(asset);
 
+            return;
+        }
+
+        if (asset.getName().equals("assets.index")) {
             return;
         }
 

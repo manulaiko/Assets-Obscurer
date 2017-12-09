@@ -5,6 +5,7 @@ import com.manulaiko.tabitha.log.Console;
 import com.manulaiko.tabitha.log.ConsoleManager;
 import lombok.Data;
 
+import javax.xml.bind.DatatypeConverter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -73,7 +74,8 @@ public class Obscurer {
             DigestInputStream input = new DigestInputStream(new FileInputStream(f), MessageDigest.getInstance("SHA1"));
             byte[] bytes = new byte[(int) f.length()];
             input.read(bytes);
-            String hash = input.getMessageDigest().toString();
+            input.close();
+            String hash = DatatypeConverter.printHexBinary(input.getMessageDigest().digest());
 
             bytes = EncryptionManager.instance().encrypt(bytes);
 
@@ -89,8 +91,7 @@ public class Obscurer {
             asset.path(p.toString());
             asset.hash(hash);
 
-            Obscurer.console.fine(asset.path() + " encrypted to " + p.toString());
-
+            Obscurer.console.fine(f.getPath() + " encrypted to " + p.toString());
         } catch (IOException e) {
             Obscurer.console.exception("Couldn't read asset!", e);
 

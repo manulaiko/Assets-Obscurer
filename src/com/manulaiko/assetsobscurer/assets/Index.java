@@ -50,7 +50,11 @@ public class Index {
      */
     public boolean contains(Asset a) {
         for (Asset b : this.assets()) {
-            if (a.hash().equals(b.hash()) || a.path().equals(b.path())) {
+            if (a.path().equals(b.path())) {
+                return true;
+            }
+
+            if (!b.hash().isEmpty() && a.hash().equals(b.hash())) {
                 return true;
             }
         }
