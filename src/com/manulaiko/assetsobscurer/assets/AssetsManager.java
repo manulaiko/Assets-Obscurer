@@ -98,6 +98,20 @@ public class AssetsManager {
     }
 
     /**
+     * Encrypts the indexed assets.
+     */
+    public void encrypt() {
+        List<Index.Asset> assets = this.index().decrypted();
+        Obscurer obscurer = new Obscurer(assets);
+
+        AssetsManager.console.info("Encrypting " + assets.size() + " assets...");
+        List<Index.Asset> encrypted = obscurer.encrypt();
+        AssetsManager.console.info(encrypted.size() + " assets encrypted!");
+
+        this.updateAll(encrypted);
+    }
+
+    /**
      * Adds a list of assets to the index.
      *
      * @param assets Assets to add.
@@ -111,5 +125,21 @@ public class AssetsManager {
         }
 
         AssetsManager.console.fine("Added " + newEntries + " new entries to the index!");
+    }
+
+    /**
+     * Updates a list of assets to the index.
+     *
+     * @param assets Assets to update.
+     */
+    public void updateAll(List<Index.Asset> assets) {
+        int updated = 0;
+        for (Index.Asset a : assets) {
+            if (this.index().update(a)) {
+                updated++;
+            }
+        }
+
+        AssetsManager.console.fine("Updated " + updated + " entries of the index!");
     }
 }
