@@ -1,6 +1,7 @@
 package com.manulaiko.assetsobscurer.main;
 
 import com.manulaiko.assetsobscurer.main.arguments.*;
+import com.manulaiko.assetsobscurer.main.commands.Encrypt;
 import com.manulaiko.assetsobscurer.main.commands.Scan;
 import com.manulaiko.tabitha.Application;
 import com.manulaiko.tabitha.arguments.Argument;
@@ -73,6 +74,7 @@ public class Launcher extends Application {
         CommandPrompt cp = new CommandPrompt();
 
         cp.add(new Scan());
+        cp.add(new Encrypt());
 
         cp.start();
     }
