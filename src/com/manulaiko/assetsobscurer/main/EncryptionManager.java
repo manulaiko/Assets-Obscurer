@@ -110,6 +110,7 @@ public class EncryptionManager {
      */
     private KeyPair _loadKeyPair() {
         try {
+            EncryptionManager.console.info("Loading key pair...");
             FileInputStream input = new FileInputStream(this.publicKey());
             byte[] encodedPublicKey = new byte[(int) this.publicKey().length()];
             input.read(encodedPublicKey);
@@ -143,6 +144,7 @@ public class EncryptionManager {
      */
     private KeyPair _generateKeyPair() {
         try {
+            EncryptionManager.console.info("Generating key pair...");
             KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
 
             keyGen.initialize(this.keyLength());
