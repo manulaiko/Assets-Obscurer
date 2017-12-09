@@ -87,7 +87,7 @@ public class Obscurer {
                 return false;
             }
             Files.write(p, bytes);
-            p = Files.move(p, Settings.assets.toPath());
+            p = Files.move(p, Settings.assets.toPath().resolve(hash));
 
             asset.isEncrypted(true);
             asset.hash(hash);
@@ -136,8 +136,7 @@ public class Obscurer {
 
         try {
             Obscurer.console.fine("Decrypting " + asset.path() + "...");
-            File f = new File(asset.hash());
-            Path p = f.toPath();
+            Path p = Settings.assets.toPath().resolve(asset.hash());
 
             byte[] bytes = Files.readAllBytes(p);
             byte[] decrypted = EncryptionManager.instance().decrypt(bytes);
@@ -147,7 +146,7 @@ public class Obscurer {
 
             asset.isEncrypted(false);
 
-            Obscurer.console.fine(f.getPath() + " decrypted to " + asset.path());
+            Obscurer.console.fine(p + " decrypted to " + asset.path());
         } catch (IOException e) {
             Obscurer.console.exception("Couldn't read asset!", e);
 
