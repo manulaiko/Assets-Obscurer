@@ -63,7 +63,7 @@ public class Scanner {
             return;
         }
 
-        this.assets().add(new Index.Asset("", asset.getPath()));
+        this.assets().add(new Index.Asset("", asset.getPath(), false));
         Scanner.console.finer("Found " + asset.getPath());
     }
 }
