@@ -1,10 +1,12 @@
 package com.manulaiko.assetsobscurer.main;
 
 import com.manulaiko.assetsobscurer.main.arguments.*;
+import com.manulaiko.assetsobscurer.main.commands.Scan;
 import com.manulaiko.tabitha.Application;
 import com.manulaiko.tabitha.arguments.Argument;
 import com.manulaiko.tabitha.log.Console;
 import com.manulaiko.tabitha.log.ConsoleManager;
+import com.manulaiko.tabitha.utils.CommandPrompt;
 
 import java.util.Arrays;
 
@@ -57,7 +59,22 @@ public class Launcher extends Application {
      */
     @Override
     public void onStarted() {
+        if (Settings.commandMode) {
+            this._startCommandPrompt();
 
+            return;
+        }
+    }
+
+    /**
+     * Starts the command prompt.
+     */
+    private void _startCommandPrompt() {
+        CommandPrompt cp = new CommandPrompt();
+
+        cp.add(new Scan());
+
+        cp.start();
     }
 
     /**
