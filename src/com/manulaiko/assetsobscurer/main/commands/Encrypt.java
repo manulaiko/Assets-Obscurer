@@ -5,7 +5,7 @@ import com.manulaiko.tabitha.utils.ICommand;
 
 /**
  * Encrypt command.
- * =============
+ * ================
  *
  * Encrypts the assets library.
  *
