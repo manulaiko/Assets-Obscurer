@@ -130,6 +130,7 @@ public class AssetsManager {
      */
     public void saveIndex() {
         try {
+            this.index().check();
             String json = new Gson().toJson(this.index());
             Path path = this.assets().toPath().resolve("assets.index");
 
@@ -148,6 +149,7 @@ public class AssetsManager {
      * Scans all the directories and adds the entries to the index.
      */
     public void scan() {
+        this.index().check();
         Scanner scanner = new Scanner(this.assets());
 
         AssetsManager.console.info("Scanning " + this.assets().getAbsolutePath() + "...");
@@ -162,6 +164,7 @@ public class AssetsManager {
      * Encrypts the indexed assets.
      */
     public void encrypt() {
+        this.index().check();
         List<Index.Asset> assets = this.index().decrypted();
         Obscurer obscurer = new Obscurer(assets);
 
@@ -176,6 +179,7 @@ public class AssetsManager {
      * Decrypts the indexed assets.
      */
     public void decrypt() {
+        this.index().check();
         List<Index.Asset> assets = this.index().encrypted();
         Obscurer obscurer = new Obscurer(assets);
 

@@ -1,8 +1,13 @@
 package com.manulaiko.assetsobscurer.assets;
 
+import com.manulaiko.assetsobscurer.main.Settings;
+import com.manulaiko.tabitha.log.Console;
+import com.manulaiko.tabitha.log.ConsoleManager;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.io.File;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,6 +23,11 @@ import java.util.stream.Collectors;
 @Data
 @AllArgsConstructor
 public class Index {
+    /**
+     * Console logger.
+     */
+    public static final Console console = ConsoleManager.forClass(Index.class);
+
     /**
      * Indexed assets.
      */
@@ -103,6 +113,46 @@ public class Index {
         asset.path(a.path());
 
         return true;
+    }
+
+    /**
+     * Checks that all the assets in the index exist.
+     *
+     * The assets that doesn't exit will be deleted from
+     * the index.
+     */
+    public void check() {
+        Index.console.fine("Checking assets...");
+        int i = this.assets().size();
+        this.assets().forEach(this::check);
+        int j = this.assets().size();
+
+        if (i == j) {
+            return;
+        }
+
+        Index.console.fine((i - j) + " assets where deleted from index.");
+    }
+
+    /**
+     * Checks that a given asset exists.
+     *
+     * If it doesn't exist in the file system it will be
+     * deleted from the index.
+     *
+     * @param asset Asset to check.
+     */
+    public void check(Asset asset) {
+        File f = new File(asset.path());
+        if (asset.isEncrypted()) {
+            f = Settings.assets.toPath().resolve(asset.hash()).toFile();
+        }
+
+        if (f.isFile()) {
+            return;
+        }
+
+        this.assets().remove(asset);
     }
 
     /**
