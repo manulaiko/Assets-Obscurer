@@ -1,5 +1,6 @@
 package com.manulaiko.assetsobscurer.main;
 
+import com.manulaiko.assetsobscurer.assets.AssetsManager;
 import com.manulaiko.assetsobscurer.main.arguments.*;
 import com.manulaiko.assetsobscurer.main.commands.*;
 import com.manulaiko.tabitha.Application;
@@ -64,6 +65,18 @@ public class Launcher extends Application {
 
             return;
         }
+
+        AssetsManager a = AssetsManager.instance();
+        a.scan();
+
+        if (Settings.encryptMode) {
+            a.encrypt();
+        } else {
+            a.decrypt();
+        }
+
+        a.saveIndex();
+        new DumpIndex().handle(new String[]{});
     }
 
     /**
@@ -92,7 +105,8 @@ public class Launcher extends Application {
                 new Assets(),
                 new Key(),
                 new KeyLength(),
-                new CommandMode()
+                new CommandMode(),
+                new EncryptMode()
         );
     }
 }

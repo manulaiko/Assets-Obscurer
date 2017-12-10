@@ -30,4 +30,9 @@ public class Settings {
      * Key length.
      */
     public static int keyLength = 128;
+
+    /**
+     * Automatic encryption mode.
+     */
+    public static boolean encryptMode = true;
 }
