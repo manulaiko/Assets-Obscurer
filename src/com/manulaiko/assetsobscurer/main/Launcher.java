@@ -35,7 +35,7 @@ public class Launcher extends Application {
      * @param args Command line arguments.
      */
     public static void main(String[] args) {
-        Launcher launcher = new Launcher("Manulaiko", "Assets Obscurer", "0.0.0", args);
+        Launcher launcher = new Launcher("Manulaiko", "Assets Obscurer", "1.0.0", args);
         launcher.start();
     }
 
