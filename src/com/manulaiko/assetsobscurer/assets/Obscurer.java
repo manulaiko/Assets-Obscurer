@@ -7,9 +7,7 @@ import com.manulaiko.tabitha.log.ConsoleManager;
 import lombok.Data;
 
 import javax.xml.bind.DatatypeConverter;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -73,7 +71,8 @@ public class Obscurer {
             File f = new File(asset.path());
             Path p = f.toPath();
 
-            DigestInputStream input = new DigestInputStream(new FileInputStream(f), MessageDigest.getInstance("SHA1"));
+            DigestInputStream input = new DigestInputStream(
+                    this.asInputStream(asset), MessageDigest.getInstance("SHA1"));
             byte[] bytes = new byte[(int) f.length()];
             input.read(bytes);
             input.close();
@@ -138,8 +137,7 @@ public class Obscurer {
             Obscurer.console.fine("Decrypting " + asset.path() + "...");
             Path p = Settings.assets.toPath().resolve(asset.hash());
 
-            byte[] bytes = Files.readAllBytes(p);
-            byte[] decrypted = EncryptionManager.instance().decrypt(bytes);
+            byte[] decrypted = this.decrypt(p);
 
             Files.write(p, decrypted);
             Files.move(p, Paths.get(asset.path()));
@@ -154,5 +152,37 @@ public class Obscurer {
         }
 
         return true;
+    }
+
+    /**
+     * Returns an asset as an input stream.
+     *
+     * @param asset Asset to return.
+     *
+     * @return Input stream for `asset`.
+     *
+     * @throws IOException If couldn't instance input stream.
+     */
+    public InputStream asInputStream(Index.Asset asset) throws IOException {
+        if (!asset.isEncrypted()) {
+            return new FileInputStream(asset.path());
+        }
+
+        byte[] bytes = this.decrypt(Paths.get(asset.path()));
+
+        return new ByteArrayInputStream(bytes);
+    }
+
+    /**
+     * Decrypts and returns an asset.
+     *
+     * @param path Path to the asset.
+     *
+     * @return Decrypted asset.
+     */
+    public byte[] decrypt(Path path) throws IOException {
+        byte[] bytes = Files.readAllBytes(path);
+
+        return EncryptionManager.instance().decrypt(bytes);
     }
 }

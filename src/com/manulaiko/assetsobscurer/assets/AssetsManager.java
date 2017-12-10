@@ -8,6 +8,7 @@ import com.manulaiko.tabitha.log.ConsoleManager;
 import lombok.Data;
 
 import java.io.File;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -82,6 +83,45 @@ public class AssetsManager {
         } catch (Exception e) {
             AssetsManager.console.info("Asset index not found, a new one will be created.");
             this.index(new Index(new ArrayList<>()));
+        }
+    }
+
+    /**
+     * Finds and returns an asset.
+     *
+     * @param path Path to the asset.
+     *
+     * @return Asset entry on index.
+     */
+    public Index.Asset find(String path) {
+        try {
+            return this.index()
+                       .assets()
+                       .stream()
+                       .filter(a -> a.path().equals(path))
+                       .findFirst()
+                       .get();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /**
+     * Builds and returns an input stream for the
+     * given asset.
+     *
+     * @param path Path to the asset.
+     *
+     * @return Input stream for `asset` or null.
+     */
+    public InputStream asInputStream(String path) {
+        try {
+            Index.Asset asset = this.find(path);
+            Obscurer obscurer = new Obscurer(null);
+
+            return obscurer.asInputStream(asset);
+        } catch (Exception e) {
+            return null;
         }
     }
 
