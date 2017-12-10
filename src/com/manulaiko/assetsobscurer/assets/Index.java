@@ -7,8 +7,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.io.File;
-import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -124,7 +122,7 @@ public class Index {
     public void check() {
         Index.console.fine("Checking assets...");
         int i = this.assets().size();
-        this.assets().forEach(this::check);
+        this.assets().removeIf(asset -> !this.check(asset));
         int j = this.assets().size();
 
         if (i == j) {
@@ -137,22 +135,17 @@ public class Index {
     /**
      * Checks that a given asset exists.
      *
-     * If it doesn't exist in the file system it will be
-     * deleted from the index.
-     *
      * @param asset Asset to check.
+     *
+     * @return Whether `asset` exists in the file system or not.
      */
-    public void check(Asset asset) {
+    public boolean check(Asset asset) {
         File f = new File(asset.path());
         if (asset.isEncrypted()) {
             f = Settings.assets.toPath().resolve(asset.hash()).toFile();
         }
 
-        if (f.isFile()) {
-            return;
-        }
-
-        this.assets().remove(asset);
+        return f.isFile();
     }
 
     /**
