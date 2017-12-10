@@ -8,9 +8,11 @@ import com.manulaiko.tabitha.log.ConsoleManager;
 import lombok.Data;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -75,15 +77,31 @@ public class AssetsManager {
         }
 
         try {
-            File file = this.assets().listFiles(f -> f.getName().equals("assets.index") && f.isFile())[0];
-            byte[] encryptedIndex = Files.readAllBytes(file.toPath());
-            String json = new String(EncryptionManager.instance().decrypt(encryptedIndex));
-
-            this.index(new Gson().fromJson(json, Index.class));
+            this.reinitialize();
         } catch (Exception e) {
             AssetsManager.console.info("Asset index not found, a new one will be created.");
             this.index(new Index(new ArrayList<>()));
         }
+    }
+
+    /**
+     * Reinitializes the asset manager.
+     *
+     * @throws NullPointerException If the assets index doesn't exist.
+     * @throws IOException          If couldn't read the assets index.
+     * @throws InvalidKeyException  If couldn't decrypt assets index.
+     */
+    public void reinitialize() throws NullPointerException, IOException, InvalidKeyException {
+        File file = this.assets().listFiles(f -> f.getName().equals("assets.index") && f.isFile())[0];
+        byte[] bytes = EncryptionManager.instance().decrypt(Files.readAllBytes(file.toPath()));
+
+        if (bytes == null) {
+            throw new InvalidKeyException();
+        }
+
+        String json = new String(bytes);
+
+        this.index(new Gson().fromJson(json, Index.class));
     }
 
     /**
@@ -183,7 +201,7 @@ public class AssetsManager {
         List<Index.Asset> assets = this.index().encrypted();
         Obscurer obscurer = new Obscurer(assets);
 
-        AssetsManager.console.info("Decrypting " + assets.size() + " assets...");
+        AssetsManager.console.info("Decrypting " + assets.size() + "assets...");
         List<Index.Asset> decrypted = obscurer.decrypt();
         AssetsManager.console.info(decrypted.size() + " assets decrypted!");
 

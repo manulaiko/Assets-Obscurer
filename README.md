@@ -254,6 +254,11 @@ import com.manulaiko.assetsobscurer.main.Settings;
 import com.manulaiko.assetsobscurer.assets.*;
 
 public class Main {
+    /**
+     * Set `Settings.assets` and `Settings.key`.
+     * Retrieve AssetsManager instance.
+     * Use it.
+     */
     public static void main(String[] args) {
         Settings.assets = new File("./assets"); // default value.
         Settings.key    = new File("./key");    // default value.
@@ -299,6 +304,44 @@ Of course, it's also encrypted.
 The AES encryption key is generated if it doesn't exist (`-k=path/to/key`) or loaded if it exist.
 
 You can specify the length of the key with the `-l=length` argument (default is 128).
+
+If you're making an online game, it's a better idea to send the encryption key through a socket.
+An implementation would look like this:
+
+
+```java
+package my.game;
+
+import com.manulaiko.assetsobscurer.main.EncryptionManager;
+import java.security.InvalidKeyException;
+
+public class Main {
+    /**
+     * Build a secret key from the received command.
+     * Back up the current secret key (if something goes wrong).
+     * Set new secret key.
+     * Reinitialize assets manager.
+     */
+    public static void main(String[] args) {
+        CommandManager.onSecretKeyCommand(command -> {
+            SecretKey key = new SecretKey(command.bytes, 0, command.bytes.length, "AES");
+            SecretKey old = EncryptionManager.instance().secretKey();
+            
+            EncryptionManager.instance().secretKey(key);
+            
+            try {
+                AssetsManager.instance().reinitialize();
+            } catch (InvalidKeyException e) {
+                System.out.println("Invalid secret key!");
+                
+                EncryptionManager.instance().secretKey(old);
+            } catch (Exception e) {
+                System.out.println("Couldn't reinitialize assets manager!");
+            }
+        });
+    }
+}
+```
 
 Arguments
 ---------

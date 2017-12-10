@@ -11,6 +11,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.security.InvalidKeyException;
 
 /**
  * Encryption manager.
@@ -88,21 +89,32 @@ public class EncryptionManager {
             return;
         }
 
-        if (!this.key().isFile()) {
-            this.secretKey(this._generateKey());
-        } else {
-            this.secretKey(this._loadKey());
-        }
-
         try {
             this.aesCipherEncrypt(Cipher.getInstance("AES"));
             this.aesCipherDecrypt(Cipher.getInstance("AES"));
 
-            this.aesCipherDecrypt().init(Cipher.DECRYPT_MODE, this.secretKey());
-            this.aesCipherEncrypt().init(Cipher.ENCRYPT_MODE, this.secretKey());
+            if (!this.key().isFile()) {
+                this.secretKey(this._generateKey());
+            } else {
+                this.secretKey(this._loadKey());
+            }
         } catch (Exception e) {
             EncryptionManager.console.exception("Couldn't initialize Encryption Manager!", e);
         }
+    }
+
+    /**
+     * Sets the encryption key.
+     *
+     * @param key New encryption key.
+     *
+     * @throws InvalidKeyException If the cipher couldn't be initialized.
+     */
+    public void secretKey(SecretKey key) throws InvalidKeyException {
+        this._secretKey = key;
+
+        this.aesCipherEncrypt().init(Cipher.ENCRYPT_MODE, this.secretKey());
+        this.aesCipherDecrypt().init(Cipher.DECRYPT_MODE, this.secretKey());
     }
 
     /**
