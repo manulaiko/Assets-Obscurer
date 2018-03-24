@@ -238,8 +238,9 @@ import com.manulaiko.assetsobscurer.main.Settings;
 
 public class Main {
     public static void main(String[] args) {
-        Settings.assets = new File("./assets"); // default value.
-        Settings.key    = new File("./key"); // default value.
+        Settings.assets     = new File("./assets"); // default value.
+        Settings.publicKey  = null;                 // default value, will generate a key pair.
+        Settings.privateKey = null;                 // default value    
     }
 }
 ```
@@ -260,8 +261,9 @@ public class Main {
      * Use it.
      */
     public static void main(String[] args) {
-        Settings.assets = new File("./assets"); // default value.
-        Settings.key    = new File("./key");    // default value.
+        Settings.assets     = new File("./assets"); // default value.
+        Settings.publicKey  = null;                 // default value, will generate a key pair.
+        Settings.privateKey = null;                 // default value
         
         AssetsManager assets = AssetsManager.instance();
         
@@ -277,7 +279,8 @@ Encryption
 ----------
 <a name="encryption"></a>
 
-The encryption works. It isn't the most secure option (atm) but it does what is intended for.
+The encryption works by generating a session key, encrypting the assests with it and then encrypt the session key with a
+RSA key pair, this way it achieves asymmetric encryption.
 
 The assets are encrypted, moved to the root of the folder and renamed to their hash. To keep track of them, they're
 added to the `assets.index` which is a json file like this:
@@ -301,13 +304,16 @@ added to the `assets.index` which is a json file like this:
 
 Of course, it's also encrypted.
 
-The AES encryption key is generated if it doesn't exist (`-k=path/to/key`) or loaded if it exist.
+By default, all assets will be encrypted with the same session key, which is generated at runtime. You can generate
+a different key at anytime by setting the current one to `null`.
 
-You can specify the length of the key with the `-l=length` argument (default is 128).
+You can specify the length of the key with the `-l=length` argument (default is 256).
 
-If you're making an online game, it's a better idea to send the encryption key through a socket.
-An implementation would look like this:
+In case the public key **AND** the private key are null, a new key pair will be generated.
+By checking that both keys are null, you can ship the private key with the game without worrying
+about your assets being modified by the users.
 
+For example, on an online game, you would wait for the server to send the private key like this:
 
 ```java
 package my.game;
@@ -317,24 +323,32 @@ import java.security.InvalidKeyException;
 
 public class Main {
     /**
-     * Build a secret key from the received command.
+     * Build a private key from the received command.
      * Back up the current secret key (if something goes wrong).
-     * Set new secret key.
+     * Set new private key.
      * Reinitialize assets manager.
      */
     public static void main(String[] args) {
         CommandManager.onSecretKeyCommand(command -> {
-            SecretKey key = new SecretKey(command.bytes, 0, command.bytes.length, "AES");
-            SecretKey old = EncryptionManager.instance().secretKey();
+            PrivateKey old = EncryptionManager.instance().privateKey();
             
-            EncryptionManager.instance().secretKey(key);
+            try {
+                EncodedKeySpec spec = new PKCS8EncodedKeySpec(command.bytes);
+                KeyFactory factory = KeyFactory.getInstance("RSA");
+                
+                PrivateKey pk = factory.generatePrivate(spec);
+                
+                EncryptionManager.instance().privateKey(pk);
+            } catch (Exception e) {
+                System.out.println("Couldn't set private key!");
+            }
             
             try {
                 AssetsManager.instance().reinitialize();
             } catch (InvalidKeyException e) {
                 System.out.println("Invalid secret key!");
                 
-                EncryptionManager.instance().secretKey(old);
+                EncryptionManager.instance().publicKey(old);
             } catch (Exception e) {
                 System.out.println("Couldn't reinitialize assets manager!");
             }
@@ -352,7 +366,6 @@ This are the supported command line arguments:
 | Name |  Value  |   Default  |              Description            |    Example    |
 |:-----|---------|------------|-------------------------------------|--------------:|
 | *a*  | string  | `./assets` | Sets the path to the asset folder   | `-a=./assets` |
-| *k*  | string  | `./key`    | Sets the path to the encryption key |    `-k=./key` |
-| *l*  | int     | `128`      | Sets the encryption key length      |      `-l=128` |
+| *l*  | int     | `256`      | Sets the encryption key length      |      `-l=256` |
 | *c*  | boolean | `true`     | Enables the command based mode      |     `-c=true` |
 | *e*  | boolean | `true`     | Automatically encrypts the assets   |     `-e=true` |

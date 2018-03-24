@@ -7,6 +7,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -75,9 +77,20 @@ public class Index {
      *
      * @param a Asset to add.
      */
-    public boolean add(Asset a) {
-        if (!this.contains(a)) {
-            this.assets().add(a);
+    public boolean add(Asset asset) {
+        if (
+                this.assets()
+                    .stream()
+                    .anyMatch(a -> {
+                        Path p = Paths.get(asset.path());
+                        return a.hash().equalsIgnoreCase(p.getFileName().toString());
+                    })
+                ) {
+            return false;
+        }
+
+        if (!this.contains(asset)) {
+            this.assets().add(asset);
 
             return true;
         }

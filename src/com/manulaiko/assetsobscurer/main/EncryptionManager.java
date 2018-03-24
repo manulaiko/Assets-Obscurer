@@ -4,14 +4,11 @@ import com.manulaiko.tabitha.log.Console;
 import com.manulaiko.tabitha.log.ConsoleManager;
 import lombok.Data;
 
-import javax.crypto.Cipher;
-import javax.crypto.KeyGenerator;
-import javax.crypto.SecretKey;
+import javax.crypto.*;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.security.InvalidKeyException;
+import java.io.*;
+import java.security.*;
 
 /**
  * Encryption manager.
@@ -43,10 +40,12 @@ public class EncryptionManager {
     public static EncryptionManager instance() {
         if (EncryptionManager._instance == null) {
             EncryptionManager._instance = new EncryptionManager(
-                    Settings.keyLength,
-                    Settings.key
+                    Settings.keyLength
             );
-            EncryptionManager._instance.initialize();
+            EncryptionManager._instance.initialize(
+                    Settings.publicKey,
+                    Settings.privateKey
+            );
         }
 
         return EncryptionManager._instance;
@@ -62,79 +61,48 @@ public class EncryptionManager {
     private final int _keyLength;
 
     /**
-     * Key location.
-     */
-    private final File _key;
-
-    /**
      * AES Key.
      */
     private SecretKey _secretKey;
 
     /**
-     * AES Cipher for encryption.
+     * Public key.
      */
-    private Cipher _aesCipherEncrypt;
+    private PublicKey _publicKey;
 
     /**
-     * AES Cipher for decryption.
+     * Private key.
      */
-    private Cipher _aesCipherDecrypt;
+    private PrivateKey _privateKey;
 
     /**
      * Initializes the encryption manager.
      */
-    private void initialize() {
+    private void initialize(PublicKey publicKey, PrivateKey privateKey) {
         if (this.secretKey() != null) {
             return;
         }
 
         try {
-            this.aesCipherEncrypt(Cipher.getInstance("AES"));
-            this.aesCipherDecrypt(Cipher.getInstance("AES"));
 
-            if (!this.key().isFile()) {
-                this.secretKey(this._generateKey());
-            } else {
-                this.secretKey(this._loadKey());
+            if (publicKey == null && privateKey == null) {
+                EncryptionManager.console.fine("Generating key pair...");
+
+                KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+                generator.initialize(1024);
+                KeyPair keyPair = generator.genKeyPair();
+
+                publicKey = keyPair.getPublic();
+                privateKey = keyPair.getPrivate();
+
+                EncryptionManager.console.finer("Key pair generated!");
             }
+
+            this.secretKey(this.generateKey());
+            this.publicKey(publicKey);
+            this.privateKey(privateKey);
         } catch (Exception e) {
-            EncryptionManager.console.exception("Couldn't initialize Encryption Manager!", e);
-        }
-    }
-
-    /**
-     * Sets the encryption key.
-     *
-     * @param key New encryption key.
-     *
-     * @throws InvalidKeyException If the cipher couldn't be initialized.
-     */
-    public void secretKey(SecretKey key) throws InvalidKeyException {
-        this._secretKey = key;
-
-        this.aesCipherEncrypt().init(Cipher.ENCRYPT_MODE, this.secretKey());
-        this.aesCipherDecrypt().init(Cipher.DECRYPT_MODE, this.secretKey());
-    }
-
-    /**
-     * Loads the key from the filesystem.
-     *
-     * @return Loaded key.
-     */
-    private SecretKey _loadKey() {
-        try {
-            EncryptionManager.console.info("Loading AES key...");
-            FileInputStream input = new FileInputStream(this.key());
-            byte[] key = new byte[(int) this.key().length()];
-            input.read(key);
-            input.close();
-
-            return new SecretKeySpec(key, "AES");
-        } catch (Exception e) {
-            EncryptionManager.console.exception("Couldn't load Key Pair!", e);
-
-            return null;
+            EncryptionManager.console.exception("Couldn't initialize EncryptionManager!", e);
         }
     }
 
@@ -143,21 +111,15 @@ public class EncryptionManager {
      *
      * @return Generated key.
      */
-    private SecretKey _generateKey() {
+    public SecretKey generateKey() {
         try {
-            EncryptionManager.console.info("Generating AES key...");
-            KeyGenerator keyGen = KeyGenerator.getInstance("AES");
+            EncryptionManager.console.info("Generating session key...");
+            KeyGenerator keyGen = KeyGenerator.getInstance("Rijndael");
             keyGen.init(this.keyLength());
 
-            SecretKey key = keyGen.generateKey();
-
-            FileOutputStream output = new FileOutputStream(this.key());
-            output.write(key.getEncoded());
-            output.close();
-
-            return key;
+            return keyGen.generateKey();
         } catch (Exception e) {
-            EncryptionManager.console.exception("Couldn't generate Key Pair!", e);
+            EncryptionManager.console.exception("Couldn't session key!", e);
 
             return null;
         }
@@ -172,7 +134,38 @@ public class EncryptionManager {
      */
     public byte[] encrypt(byte[] bytes) {
         try {
-            return this.aesCipherEncrypt().doFinal(bytes);
+            if (this.publicKey() == null) {
+                throw new Exception("Public key is null!");
+            }
+
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            DataOutputStream output = new DataOutputStream(baos);
+            Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, this.publicKey());
+
+            if (this.secretKey() == null) {
+                this.secretKey(this.generateKey());
+            }
+
+            byte[] encriptedKey = cipher.doFinal(this.secretKey().getEncoded());
+            output.writeInt(encriptedKey.length);
+            output.write(encriptedKey);
+
+            SecureRandom r = new SecureRandom();
+            byte[] iv = new byte[16];
+            r.nextBytes(iv);
+
+            output.write(iv);
+
+            IvParameterSpec spec = new IvParameterSpec(iv);
+            Cipher symmetricCipher = Cipher.getInstance("Rijndael/CBC/PKCS5Padding");
+            symmetricCipher.init(Cipher.ENCRYPT_MODE, this.secretKey(), spec);
+
+            CipherOutputStream cos = new CipherOutputStream(output, symmetricCipher);
+            cos.write(bytes);
+            cos.close();
+
+            return baos.toByteArray();
         } catch (Exception e) {
             EncryptionManager.console.exception("Couldn't encrypt bytes!", e);
 
@@ -189,11 +182,64 @@ public class EncryptionManager {
      */
     public byte[] decrypt(byte[] bytes) {
         try {
-            return this.aesCipherDecrypt().doFinal(bytes);
+            DataInputStream input = new DataInputStream(new ByteArrayInputStream(bytes));
+
+            SecretKey key = this._readKey(input);
+            IvParameterSpec iv = this._readIv(input);
+
+            Cipher cipher = Cipher.getInstance("Rijndael/CBC/PKCS5Padding");
+            cipher.init(Cipher.DECRYPT_MODE, key, iv);
+            CipherInputStream cis = new CipherInputStream(input, cipher);
+
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+            byte[] buffer = new byte[0xFFFF];
+            for (int len = cis.read(buffer); len != -1; len = cis.read(buffer)) {
+                out.write(buffer, 0, len);
+            }
+
+            return out.toByteArray();
         } catch (Exception e) {
             EncryptionManager.console.exception("Couldn't decrypt bytes!", e);
 
             return null;
         }
+    }
+
+    /**
+     * Returns the session key from a input stream.
+     *
+     * @param input Input stream with session key.
+     *
+     * @return Session key.
+     */
+    private SecretKey _readKey(DataInputStream input) throws Exception {
+        if (this.privateKey() == null) {
+            throw new Exception("Private key is null!");
+        }
+
+        Cipher rsaCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+        rsaCipher.init(Cipher.DECRYPT_MODE, this.privateKey());
+
+        byte[] sessionKey = new byte[input.readInt()];
+        input.readFully(sessionKey);
+
+        byte[] key = rsaCipher.doFinal(sessionKey);
+
+        return new SecretKeySpec(key, "Rijndael");
+    }
+
+    /**
+     * Returns the IV from a input stream.
+     *
+     * @param input Input stream with IV.
+     *
+     * @return IV from input.
+     */
+    private IvParameterSpec _readIv(DataInputStream input) throws Exception {
+        byte[] iv = new byte[16];
+        input.read(iv);
+
+        return new IvParameterSpec(iv);
     }
 }

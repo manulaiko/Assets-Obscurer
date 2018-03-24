@@ -1,6 +1,8 @@
 package com.manulaiko.assetsobscurer.main;
 
 import java.io.File;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 
 /**
  * Settings class.
@@ -22,14 +24,19 @@ public class Settings {
     public static File assets = new File("assets");
 
     /**
-     * Path to the encryption key.
+     * Publick key.
      */
-    public static File key = new File("key");
+    public static PublicKey publicKey = null;
+
+    /**
+     * Private key.
+     */
+    public static PrivateKey privateKey = null;
 
     /**
      * Key length.
      */
-    public static int keyLength = 128;
+    public static int keyLength = 256;
 
     /**
      * Automatic encryption mode.

@@ -201,7 +201,7 @@ public class AssetsManager {
         List<Index.Asset> assets = this.index().encrypted();
         Obscurer obscurer = new Obscurer(assets);
 
-        AssetsManager.console.info("Decrypting " + assets.size() + "assets...");
+        AssetsManager.console.info("Decrypting " + assets.size() + " assets...");
         List<Index.Asset> decrypted = obscurer.decrypt();
         AssetsManager.console.info(decrypted.size() + " assets decrypted!");
 
