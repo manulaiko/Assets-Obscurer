@@ -72,7 +72,10 @@ public class Obscurer {
             Path p = f.toPath();
 
             DigestInputStream input = new DigestInputStream(
-                    this.asInputStream(asset), MessageDigest.getInstance("SHA1"));
+                    this.asInputStream(asset),
+                    MessageDigest.getInstance("SHA1")
+            );
+
             byte[] bytes = new byte[(int) f.length()];
             input.read(bytes);
             input.close();

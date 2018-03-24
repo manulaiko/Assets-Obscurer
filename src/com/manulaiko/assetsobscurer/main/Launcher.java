@@ -90,6 +90,8 @@ public class Launcher extends Application {
         cp.add(new Decrypt());
         cp.add(new DumpIndex());
         cp.add(new SaveIndex());
+        cp.add(new GenerateKeyPair());
+        cp.add(new LoadKeyPair());
 
         cp.start();
     }
@@ -103,7 +105,6 @@ public class Launcher extends Application {
     protected Iterable<Argument> _arguments() {
         return Arrays.asList(
                 new Assets(),
-                new Key(),
                 new KeyLength(),
                 new CommandMode(),
                 new EncryptMode()
